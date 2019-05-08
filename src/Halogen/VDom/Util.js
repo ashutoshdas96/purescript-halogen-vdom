@@ -27,11 +27,11 @@ exports.unsafeHasAny = function (key, obj) {
 };
 
 exports.updateProperty = function (key, val, obj) {
-  window.updateProperty(obj, {value0: key, value1: val})
+  PrestoUI.updateProperty(obj, {value0: key, value1: val})
 };
 
 exports.addProperty = function (key, val, obj) {
-  window.addProperty(obj, {value0: key, value1: val})
+  PrestoUI.addProperty(obj, {value0: key, value1: val})
 };
 
 exports.unsafeSetAny = function (key, val, obj) {
@@ -151,7 +151,7 @@ exports.diffPropWithKeyAndIxE = function (o1, as, fk, f1, f2, f3, el) {
     f2(k, o1[k]);
   }
   if (replace)
-    window.replaceView(el);
+    PrestoUI.replaceView(el);
   return o2;
 };
 
@@ -168,7 +168,7 @@ exports.setTextContent = function (s, n) {
 };
 
 exports.createElement = function (ns, name, doc) {
-  return {type: name, children: [], props: {}, __ref: window.createPrestoElement()}
+  return {type: name, children: [], props: {}, __ref: PrestoUI.createPrestoElement()}
 };
 
 exports.insertChildIx = function (type, i, a, b) {
@@ -191,9 +191,9 @@ exports.insertChildIx = function (type, i, a, b) {
   var index = b.children.indexOf(a);
   if (index !== -1) {
     b.children.splice(index, 1);
-    window.moveChild(a, b, i);
+    PrestoUI.moveChild(a, b, i);
   } else {
-    window.addChild(a, b, i);
+    PrestoUI.addChild(a, b, i);
   }
   b.children.splice(i, 0, a);
   a.parentNode = b;
@@ -211,7 +211,7 @@ exports.removeChild = function (a, b) {
   }
 
   if (childIndex > -1) {
-    window.removeChild(a, b, childIndex);
+    PrestoUI.removeChild(a, b, childIndex);
     a.props.__removed = true;
     b.children.splice(childIndex, 1);
   }
@@ -252,7 +252,7 @@ exports.addEventListener = function (pr, ev, listener, el) {
   }
   el.props[ev] = listener;
   if(pr == "patch") {
-    window.replaceView(el);
+    PrestoUI.replaceView(el);
   }
 };
 
