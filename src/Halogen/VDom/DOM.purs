@@ -59,6 +59,7 @@ buildVDom spec = render
     Text s → buildText spec s
     Elem es ch → buildElem spec es ch
     Keyed es ch → buildKeyed spec es ch
+    KeyedBlock es ch → buildKeyedBlock spec es ch
     Widget w → buildWidget spec w
     Grafted g → buildVDom spec (runGraft g)
 
@@ -196,6 +197,68 @@ buildKeyed (VDomSpec spec) = render
             onThat = Fn.mkFn3 \k ix (Tuple _ vdom) → do
               res@Step n' m' h' ← buildVDom (VDomSpec spec) vdom
               Fn.runFn4 Util.insertChildIx "patch" ix n' node
+              pure res
+          steps ← Fn.runFn6 Util.diffWithKeyAndIxE ch1 ch2 fst onThese onThis onThat
+          attrs' ← Machine.step attrs as2
+          pure
+            (Step node
+              (Fn.runFn5 patch node attrs' es2 steps len2)
+              (Fn.runFn3 done node attrs' steps))
+    vdom → do
+      Fn.runFn3 done node attrs ch1
+      buildVDom (VDomSpec spec) vdom
+
+  done = Fn.mkFn3 \node attrs steps → do
+    parent ← pure (Util.unsafeParent node)
+    Fn.runFn2 Util.removeChild node parent
+    Fn.runFn2 Util.forInE steps (Fn.mkFn2 \_ (Step _ _ halt) → halt)
+    Machine.halt attrs
+
+buildKeyedBlock
+  ∷ ∀ eff a w
+  . VDomSpec (VDomEffects eff) a w
+  → ElemSpec a
+  → Array (Tuple String (VDom a w))
+  → VDomStep (VDomEffects eff) (VDom a w) DOM.Node
+buildKeyedBlock (VDomSpec spec) = render
+  where
+  render es1@(ElemSpec ns1 name1 as1) ch1 = do
+    el ← Fn.runFn3 Util.createElement (toNullable ns1) name1 spec.document
+    let
+      node = DOM.elementToNode el
+      onChild = Fn.mkFn3 \k ix (Tuple _ vdom) → do
+        res@Step n m h ← buildVDom (VDomSpec spec) vdom
+        Fn.runFn4 Util.insertChildIx "render" ix n node
+        pure res
+    steps ← Fn.runFn3 Util.strMapWithIxE ch1 fst onChild
+    attrs ← spec.buildAttributes el as1
+    pure
+      (Step node
+        (Fn.runFn5 patch node attrs es1 steps (Array.length ch1))
+        (Fn.runFn3 done node attrs steps))
+
+  patch = Fn.mkFn5 \node attrs (es1@(ElemSpec ns1 name1 as1)) ch1 len1 → case _ of
+    Grafted g →
+      Fn.runFn5 patch node attrs es1 ch1 len1 (runGraft g)
+    Keyed es2@(ElemSpec ns2 name2 as2) ch2 | Fn.runFn2 eqElemSpec es1 es2 →
+      case len1, Array.length ch2 of
+        0, 0 → do
+          attrs' ← Machine.step attrs as2
+          pure
+            (Step node
+              (Fn.runFn5 patch node attrs' es2 ch1 0)
+              (Fn.runFn3 done node attrs' ch1))
+        _, len2 → do
+          let
+            onThese = Fn.mkFn4 \k ix' (Step n step _) (Tuple _ vdom) → do
+              {-- res@Step n' m' h' ← step vdom --}
+              res@Step n' m' h' ← buildVDom (VDomSpec spec) vdom
+              Fn.runFn4 Util.insertChildIx "block" ix' n' node
+              pure res
+            onThis = Fn.mkFn2 \k (Step n _ halt) → halt
+            onThat = Fn.mkFn3 \k ix (Tuple _ vdom) → do
+              res@Step n' m' h' ← buildVDom (VDomSpec spec) vdom
+              Fn.runFn4 Util.insertChildIx "block" ix n' node
               pure res
           steps ← Fn.runFn6 Util.diffWithKeyAndIxE ch1 ch2 fst onThese onThis onThat
           attrs' ← Machine.step attrs as2

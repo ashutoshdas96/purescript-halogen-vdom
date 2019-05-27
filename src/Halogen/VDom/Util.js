@@ -196,6 +196,10 @@ exports.createElement = function (ns, name, doc) {
 exports.insertChildIx = function (type, i, a, b) {
   return function () {
     var n = (b.children[i]) || {__ref: {__id: "-1"}};
+    if(type === "block") {
+      window.updateChild(a , b, i);
+      return;
+    }
     if (n === a) {
       return;
     }

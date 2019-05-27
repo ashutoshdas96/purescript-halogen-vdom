@@ -28,6 +28,7 @@ data VDom a w
   = Text String
   | Elem (ElemSpec a) (Array (VDom a w))
   | Keyed (ElemSpec a) (Array (Tuple String (VDom a w)))
+  | KeyedBlock (ElemSpec a) (Array (Tuple String (VDom a w)))
   | Widget w
   | Grafted (Graft a w)
 
@@ -75,6 +76,7 @@ runGraft =
       go (Text s) = Text s
       go (Elem spec ch) = Elem (map fa spec) (map go ch)
       go (Keyed spec ch) = Keyed (map fa spec) (map (map go) ch)
+      go (KeyedBlock spec ch) = KeyedBlock (map fa spec) (map (map go) ch)
       go (Widget w) = Widget (fw w)
       go (Grafted g) = Grafted (bimap fa fw g)
     in
