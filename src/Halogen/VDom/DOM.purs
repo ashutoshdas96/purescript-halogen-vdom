@@ -240,7 +240,7 @@ buildKeyedBlock (VDomSpec spec) = render
   patch = Fn.mkFn5 \node attrs (es1@(ElemSpec ns1 name1 as1)) ch1 len1 → case _ of
     Grafted g →
       Fn.runFn5 patch node attrs es1 ch1 len1 (runGraft g)
-    Keyed es2@(ElemSpec ns2 name2 as2) ch2 | Fn.runFn2 eqElemSpec es1 es2 →
+    KeyedBlock es2@(ElemSpec ns2 name2 as2) ch2 | Fn.runFn2 eqElemSpec es1 es2 →
       case len1, Array.length ch2 of
         0, 0 → do
           attrs' ← Machine.step attrs as2
