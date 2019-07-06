@@ -294,4 +294,35 @@ exports.removeEventListener = function (ev, listener, el) {
   };
 };
 
+exports.compareNode = function(a){
+  return function(b){
+      var oldCopy = R.clone(a.value0)
+      var newCopy = R.clone(b.value0)
+      return compareNodes(oldCopy,newCopy);
+  }
+}
+
+var compareNodes = function(oldNode, newNode){
+  for(var key in oldNode.props){
+    if(typeof oldNode.props[key] == "function"){
+      delete oldNode.props[key];
+      delete newNode.props[key];
+    }
+  }
+  if(R.equals(oldNode.props,newNode.props)){
+    var acc = true;
+    if (oldNode.children.length == newNode.children.length && oldNode.children.length != 0){
+      for(var i = 0; i < oldNode.children.length; i++){
+        acc = acc && compareNodes(oldNode.children[i],newNode.children[i]);
+        if (!acc){
+           break;
+        }
+      }
+    }
+    return acc;
+  }else {
+    return false;
+  }
+}
+
 exports.jsUndefined = void 0;

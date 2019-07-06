@@ -36,6 +36,7 @@ module Halogen.VDom.Util
   , removeProperty
   , JsUndefined
   , jsUndefined
+  , compareNode
   ) where
 
 import Prelude
@@ -206,3 +207,5 @@ foreign import removeEventListener
 foreign import data JsUndefined ∷ Type
 
 foreign import jsUndefined ∷ JsUndefined
+
+foreign import compareNode :: forall node. node -> node -> Boolean
