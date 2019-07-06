@@ -250,10 +250,13 @@ buildKeyedBlock (VDomSpec spec) = render
               (Fn.runFn3 done node attrs' ch1))
         _, len2 → do
           let
-            onThese = Fn.mkFn4 \k ix' (Step n step _) (Tuple _ vdom) → do
-              {-- res@Step n' m' h' ← step vdom --}
+            onThese = Fn.mkFn4 \k ix' old@(Step n step _) (Tuple _ vdom) → do
               res@Step n' m' h' ← buildVDom (VDomSpec spec) vdom
-              Fn.runFn4 Util.insertChildIx "block" ix' n' node
+              if Util.compareNode res old
+                then
+                  pure unit
+                else
+                  Fn.runFn4 Util.insertChildIx "block" ix' n' node
               pure res
             onThis = Fn.mkFn2 \k (Step n _ halt) → halt
             onThat = Fn.mkFn3 \k ix (Tuple _ vdom) → do
