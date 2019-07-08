@@ -7,6 +7,8 @@
 // addEventListener
 // setAttribute
 
+var R = require('ramda');
+
 exports.unsafeGetAny = function (key, obj) {
   return obj[key];
 };
