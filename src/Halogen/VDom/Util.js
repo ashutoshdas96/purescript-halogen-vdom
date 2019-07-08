@@ -7,6 +7,8 @@
 // addEventListener
 // setAttribute
 
+var R = require('ramda');
+
 exports.unsafeGetAny = function (key, obj) {
   return obj[key];
 };
@@ -294,6 +296,7 @@ exports.removeEventListener = function (ev, listener, el) {
   };
 };
 
+// Wrapper function to extract views from Step to call compareNodes
 exports.compareNode = function(a){
   return function(b){
       var oldCopy = R.clone(a.value0)
@@ -302,27 +305,31 @@ exports.compareNode = function(a){
   }
 }
 
+/* Compare Node function
+** Used to compare two views for block nodes
+** Function returns true if both the views are equal
+** Recurrsively checks if any child is not equal, breaking reccursion if a single false is reached
+*/
 var compareNodes = function(oldNode, newNode){
+  // Below loop is added to remove functions from the view JSON
+  // Functions are removed since comparison would always return false
+  // TODO :: Add way to create an event level diff
   for(var key in oldNode.props){
-    if(typeof oldNode.props[key] == "function"){
+    // Check on both old and new node, ensures that if an event is added or deleted it will trigger a diff (Rerender)
+    if(typeof oldNode.props[key] == "function" && typeof newNode.props[key] == "function"){
       delete oldNode.props[key];
       delete newNode.props[key];
     }
   }
-  if(R.equals(oldNode.props,newNode.props)){
-    var acc = true;
-    if (oldNode.children.length == newNode.children.length && oldNode.children.length != 0){
-      for(var i = 0; i < oldNode.children.length; i++){
-        acc = acc && compareNodes(oldNode.children[i],newNode.children[i]);
-        if (!acc){
-           break;
-        }
-      }
-    }
-    return acc;
-  }else {
-    return false;
+  // Setting default value for the Accumulator
+  // Compare props of root views
+  var acc = R.equals(oldNode.props,newNode.props) && oldNode.children.length == newNode.children.length;
+  for(var i = 0; i < oldNode.children.length && acc; i++){
+    // Compare children of root node
+    acc = acc && compareNodes(oldNode.children[i],newNode.children[i]);
   }
+  // Return if nodes are the same
+  return acc;
 }
 
 exports.jsUndefined = void 0;
